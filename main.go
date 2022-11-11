@@ -1,11 +1,40 @@
 package main
 
+// TODO check all my fking math!!
+// tests
+
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 	// "time"
 )
+
+type Player struct {
+	AtBats           int
+	Hits             int
+	PlateAppearances int
+	Walks            int
+	Position         Position
+}
+
+func (p Player) Avg() int {
+	f := toInt(float64(p.Hits) / float64(p.AtBats))
+	return f
+}
+
+func (p Player) Obp() int {
+	f := toInt(float64(p.Walks) / float64(p.PlateAppearances))
+	return f
+}
+
+type AtBat struct {
+	IsOnBase bool
+	IsHit    bool
+	Hit      Hit
+	Out      Out
+}
 
 type Position int64
 
@@ -24,23 +53,23 @@ const (
 type Hit int64
 
 const (
-	Single Hit = iota
+	HomeRun Hit = iota
+	Single
 	Double
 	Triple
-	HomeRun
 )
 
 func (h Hit) String() string {
-  switch h {
-  case Single:
-  return "Single"
-  case Double:
-  return "Double"
-  case Triple:
-  return "Triple"
-  default:
-  return "HomeRun"
-}
+	switch h {
+	case Single:
+		return "Single"
+	case Double:
+		return "Double"
+	case Triple:
+		return "Triple"
+	default:
+		return "HomeRun"
+	}
 }
 
 type Out int64
@@ -53,108 +82,155 @@ const (
 )
 
 func (o Out) String() string {
-  switch o {
-  case Strike:
-  return "Strike"
-  case Fly:
-  return "Fly"
-  case Pop:
-  return "Pop"
-  default:
-  return "Ground"
-}
+	switch o {
+	case Strike:
+		return "Strike"
+	case Fly:
+		return "Fly"
+	case Pop:
+		return "Pop"
+	default:
+		return "Ground"
+	}
 }
 
 func main() {
-  rand.Seed(time.Now().UnixNano())
+	i := 0
+
+	plateAppearanceCount := 10000
+
+	onBase := 0
+	hit := 0
+	out := 0
+	walk := 0
 
 	player := Player{
-		BattingAverage:   300,
-		OnBasePercentage: 400,
+		Hits:             98,
+		AtBats:           256,
+		PlateAppearances: 365,
+		Walks:            34,
 		Position:         RF,
 	}
 
-	outcome := CalculateOutcome(player)
+	for i < plateAppearanceCount {
+		x := RandomAtBat(player)
+		switch x {
+		case "Hit":
+			hit++
+			onBase++
+		case "Out":
+			out++
+		default:
+			walk++
+			onBase++
+		}
+		i++
+	}
+	fmt.Println("Walks " + strconv.Itoa(walk))
+	fmt.Println("Hits " + strconv.Itoa(hit))
 
-  if (!outcome.IsOnBase){
-    fmt.Println("You're Out! " + outcome.Out.String())
-  } else {
-    fmt.Println("Nice Hit! " + outcome.Hit.String())
-  }
+	fmt.Println("Outs " + strconv.Itoa(out))
+	fmt.Println("On Base " + strconv.Itoa(onBase))
+	fmt.Println("")
 
-	fmt.Println(outcome.IsOnBase)
+	obp := toInt(float64(onBase*10) / float64(plateAppearanceCount))
+	fmt.Println("OBP " + strconv.Itoa(obp))
+
+	avg := toInt(float64(hit*10) / float64(plateAppearanceCount))
+	fmt.Println("AVG " + strconv.Itoa(avg))
+
+	wavg := toInt(float64(walk*10) / float64(plateAppearanceCount))
+	fmt.Println("WAVG " + strconv.Itoa(wavg))
 }
 
-type Player struct {
-	BattingAverage   int
-	OnBasePercentage int
-	Position         Position
+func RandomAtBat(player Player) string {
+	rand.Seed(time.Now().UnixNano())
+
+	result := CalculateAtBat(player)
+
+	if result.IsOnBase && result.IsHit {
+		return "Hit"
+	}
+
+	if result.IsOnBase {
+		return "Walk"
+	}
+
+	return "Out"
 }
 
-type Outcome struct {
-	IsOnBase bool
-	Hit   Hit
-	Out   Out
-}
+func CalculateAtBat(player Player) AtBat {
+	max := 1000
+	random := rand.Intn(max)
 
-func CalculateOutcome(player Player) Outcome {
-	rand := generateRandomNumber()
+	if random <= player.Obp() {
+		// TODO this needs to be better. Not sure we may need to have plate apearances
 
-  fmt.Println(rand)
-	if rand <= player.OnBasePercentage {
-		return Outcome{
+		walkDelta := player.Obp() - player.Avg()
+
+		walkPercent := toInt(float64(walkDelta) / float64(player.Obp()))
+
+		r := rand.Intn(100)
+
+		if r <= walkPercent {
+			return AtBat{
+				IsOnBase: true,
+				IsHit:    false,
+			}
+		}
+
+		return AtBat{
 			IsOnBase: true,
-			Hit:   generateRandomHit(),
+			IsHit:    true,
+			Hit:      generateRandomHit(),
 		}
 	}
 
-	return Outcome{
+	return AtBat{
 		IsOnBase: false,
-		Out:   generateRandomOut(),
+		Out:      generateRandomOut(),
 	}
 }
 
 func generateRandomHit() Hit {
-  max := 4
+	max := 4
 
-  // Intn will not reach the max
-  r := rand.Intn(max)
+	// Intn is 0 indexed ie. max of 4 = [0, 1, 2, 3]
+	r := rand.Intn(max)
 
-  fmt.Println(r)
-  switch r {
-  case 1:
-  return Single
-  case 2:
-  return Double
-  case 3:
-  return Triple
-  default:
-  return HomeRun
-}
+	switch r {
+	case 1:
+		return Single
+	case 2:
+		return Double
+	case 3:
+		return Triple
+	case 0:
+		return HomeRun
+	}
+	return HomeRun
 }
 
 func generateRandomOut() Out {
-  max := 4
-  r := rand.Intn(max)
-  fmt.Println(r)
-  switch r {
-  case 1:
-  return Fly
-  case 2:
-  return Ground
-  case 3:
-  return Strike
-  default:
-  return Pop
-}
+	max := 3
+	r := rand.Intn(max)
+
+	switch r {
+	case 1:
+		return Fly
+	case 2:
+		return Ground
+	case 3:
+		return Strike
+	default:
+		return Pop
+	}
 }
 
-func generateRandomNumber() int {
-  max := 1000
-  r := rand.Intn(max)
-	return r
-}
+func toInt(f float64) int {
 
+	return (int)(f * 100)
+}
 
 // import (
 // 	// "github.com/gin-gonic/gin"
