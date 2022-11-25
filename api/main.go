@@ -16,7 +16,14 @@ type Player struct {
 	Hits             int
 	PlateAppearances int
 	Walks            int
+	Doubles          int
+	Triples          int
+	HomeRuns         int
 	Position         Position
+}
+
+func (p Player) Singles() int {
+	return p.Hits - (p.Doubles + p.Triples + p.HomeRuns)
 }
 
 func (p Player) Avg() int {
@@ -104,16 +111,19 @@ func main() {
 	out := 0
 	walk := 0
 
-	player := Player{
-		Hits:             98,
-		AtBats:           256,
-		PlateAppearances: 365,
-		Walks:            34,
+	aaron := Player{
+		Hits:             177,
+		AtBats:           570,
+		PlateAppearances: 696,
+		Walks:            111,
+		Doubles:          28,
+		Triples:          0,
+		HomeRuns:         62,
 		Position:         RF,
 	}
 
 	for i < plateAppearanceCount {
-		x := RandomAtBat(player)
+		x := RandomAtBat(aaron)
 		switch x {
 		case "Hit":
 			hit++
@@ -164,11 +174,7 @@ func CalculateAtBat(player Player) AtBat {
 	random := rand.Intn(max)
 
 	if random <= player.Obp() {
-		// TODO this needs to be better. Not sure we may need to have plate apearances
-
-		walkDelta := player.Obp() - player.Avg()
-
-		walkPercent := toInt(float64(walkDelta) / float64(player.Obp()))
+		walkPercent := toInt(float32(player.Walks*1000) / float32(player.PlateAppearances))
 
 		r := rand.Intn(100)
 
@@ -228,7 +234,6 @@ func generateRandomOut() Out {
 }
 
 func toInt(f float64) int {
-
 	return (int)(f * 100)
 }
 
