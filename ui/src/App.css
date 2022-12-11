@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.transition {
+  translate: all 2s ease
+}
+
+.nav-link{
+  @apply hover:text-amber-100 px-4 cursor-pointer text-zinc-50
+}
+
+.btn {
+  @apply px-4 py-3 rounded-full shadow cursor-pointer font-bold tracking-wide uppercase hover:shadow-lg hover:opacity-90
+}
+
+.btn-norm {
+  @apply bg-teal-700 text-zinc-50 hover:bg-teal-800 hover:text-amber-100 
+}
+
+.btn-light {
+  @apply bg-cyan-300 text-zinc-600 hover:bg-cyan-400
+}
+
+.btn-action {
+  @apply bg-amber-600 text-zinc-50 hover:bg-amber-700 hover:text-amber-100 
+}
